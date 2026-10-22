@@ -2,7 +2,7 @@ import {downloadMediaMessage} from '@whiskeysockets/baileys';
 import {Sticker, StickerTypes} from 'stickers-formatter';
 import blacklist from '../assets/js/blacklist.js';
 
-export default function readSw(sock, from, msg) {
+export function readSw(sock, from, msg) {
   
   if (from === "status@broadcast") {
     const emoji = ['👍', '💫', '🧢', '🙏', '😋'];
