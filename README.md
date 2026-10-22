@@ -25,7 +25,7 @@ Follow these steps to deploy and run the bot locally:
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com
+   git clone https://github.com/dikzzproject/bot-whatsapp.git
    cd bot-whatsapp
    ```
 
