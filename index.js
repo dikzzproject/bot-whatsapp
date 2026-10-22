@@ -2,8 +2,8 @@ import makeWaSocket, {DisconnectReason,useMultiFileAuthState} from '@whiskeysock
 import pino from 'pino';
 import fs from 'fs';
 import path from 'path';
-import ping, {menu} from './scripts/pesan.js';
-import readSw, {buatSticker,tagall} from './scripts/fitur.js';
+import {ping, menu} from './scripts/pesan.js';
+import {readSw, buatSticker,tagall} from './scripts/fitur.js';
 import tebakkata from './minigame/tebakkata.js'
 import kick from './scripts/kick.js';
 import gcSetting from './scripts/open-close.js';
@@ -51,6 +51,7 @@ function bot(nomer) {
       const chatId = msg.key.remoteJid;
 
       ping(sock, chatId, msg);
+      menu(sock, chatId, msg);
     });
   }).catch(err => console.log(err));
 }

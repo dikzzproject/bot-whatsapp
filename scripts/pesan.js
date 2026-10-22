@@ -1,4 +1,4 @@
-export default function ping(sock, remoteJid, msg) {
+export function ping(sock, remoteJid, msg) {
   if (!msg || msg.isHistory) return;
   const pesan = msg.message?.conversation ||
     msg.message?.extendedTextMessage?.text || '';
