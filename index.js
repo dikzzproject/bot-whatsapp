@@ -12,7 +12,7 @@ import tiktok from './scripts/tt.js';
 import welcome from './scripts/welcome.js';
 
 function bot(nomer) {
-  const session = `session/${nomer}`;
+  const session = `./session/${nomer}`;
   useMultiFileAuthState(session).then(({state, saveCreds}) => {
     const sock = (makeWaSocket.default || makeWaSocket)({
       auth: state,
