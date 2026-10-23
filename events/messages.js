@@ -9,7 +9,7 @@ import { pathToFileURL } from "url";
 
 global.commands = new Map();
 global.prefixes = [".", "!", "/"];
-global.owner = ["601143030730", "6285111509070"]; 
+global.owner = ["601143030730", "6285111509070", "131624289210464"];
 const cmdsFolder = path.join(import.meta.dirname, "../scripts");
 
 const groupMetadataCache = new Map();
@@ -74,18 +74,20 @@ async function getCachedGroupMetadata(sock, chatId) {
     }
 }
 
-export default async function (sock, msg) {
+export default async (sock, msg) => {
     const content = normalizeMessageContent(msg.message);
     if (!content) return;
 
     msg.id = msg.key.id;
     msg.fromMe = msg.key.fromMe;
-    msg.chat = jidNormalizedUser(msg.key.remoteJid || msg.key.remoteJidAlt || "");
+    msg.chat = jidNormalizedUser(
+        msg.key.remoteJid || msg.key.remoteJidAlt || ""
+    );
     msg.isGroup = msg.chat.endsWith("@g.us");
-    msg.username = msg.key.participantUsername || msg.key.remoteJidUsername
+    msg.username = msg.key.participantUsername || msg.key.remoteJidUsername;
     msg.sender = jidNormalizedUser(
-        msg.isGroup 
-            ? (msg.key.participant || msg.key.participantAlt || msg.participant) 
+        msg.isGroup
+            ? msg.key.participant || msg.key.participantAlt || msg.participant
             : msg.chat
     );
     msg.name = msg.pushName || msg.verifiedBizName || "Unknown";
@@ -93,7 +95,7 @@ export default async function (sock, msg) {
     const mtype = getContentType(content);
     if (!mtype) return;
     const m = content[mtype];
-    
+
     let rawText = "";
     if (typeof m === "string") rawText = m;
     else if (m?.text) rawText = m.text;
@@ -106,7 +108,7 @@ export default async function (sock, msg) {
     const contextInfo = m?.contextInfo || {};
     msg.mentionedJid = contextInfo.mentionedJid || [];
     const quotedMessage = contextInfo.quotedMessage;
-    
+
     if (quotedMessage) {
         const normalizedQuoted = normalizeMessageContent(quotedMessage);
         if (normalizedQuoted) {
@@ -116,8 +118,13 @@ export default async function (sock, msg) {
                 type: quotedType,
                 msg: quotedMsg,
                 id: contextInfo.stanzaId || null,
-                sender: jidNormalizedUser(contextInfo.participant || contextInfo.participantAlt || ""),
-                text: typeof quotedMsg === "string" ? quotedMsg : quotedMsg?.text || quotedMsg?.caption || ""
+                sender: jidNormalizedUser(
+                    contextInfo.participant || contextInfo.participantAlt || ""
+                ),
+                text:
+                    typeof quotedMsg === "string"
+                        ? quotedMsg
+                        : quotedMsg?.text || quotedMsg?.caption || ""
             };
         } else {
             msg.quoted = null;
@@ -132,28 +139,32 @@ export default async function (sock, msg) {
     const senderNumber = msg.sender.split("@")[0];
     const isOwner = global.owner.includes(senderNumber);
 
-    const groupMetadata = msg.isGroup ? await getCachedGroupMetadata(sock, msg.chat) : {};
-    const participants = msg.isGroup ? (groupMetadata.participants || []) : [];
-    
-    const user = m.isGroup
-            ? participants?.find( u => (u.id || u.phoneNumber) === m.sender ||
-            u.username === msg.username
-              ) || {}
-            : {};
-        const bot = m.isGroup
-            ? participants?.find(
-                  u =>
-                      (u.id || u.phoneNumber) === sock.user?.lid ||
-                      (u.id || u.phoneNumber) === sock.user?.id
-              ) || {}
-            : {};
-        
+    const groupMetadata = msg.isGroup
+        ? await getCachedGroupMetadata(sock, msg.chat)
+        : {};
+    const participants = msg.isGroup ? groupMetadata.participants || [] : [];
+
+    const user = msg.isGroup
+        ? participants?.find(
+              u =>
+                  (u.id || u.phoneNumber) === msg.sender ||
+                  u.username === msg.username
+          ) || {}
+        : {};
+    const bot = msg.isGroup
+        ? participants?.find(
+              u =>
+                  (u.id || u.phoneNumber) === sock.user?.lid ||
+                  (u.id || u.phoneNumber) === sock.user?.id
+          ) || {}
+        : {};
+
     const isRAdmin = user?.admin === "superadmin";
     const isAdmin = isRAdmin || user?.admin === "admin";
     const isBotAdmin = !!bot?.admin;
 
     const prefix = global.prefixes.find(p => msg.text.startsWith(p));
-    if (!prefix) return; 
+    if (!prefix) return;
 
     const args = msg.text.slice(prefix.length).trim().split(/\s+/);
     const command = args.shift().toLowerCase();
@@ -161,16 +172,19 @@ export default async function (sock, msg) {
 
     const cmd = global.commands.get(command);
     if (cmd) {
-        console.log(`[CMD] ${msg.name} (${senderNumber}) mengetik: ${prefix + command}`);
+        console.log(
+            `[CMD] ${msg.name} (${senderNumber}) mengetik: ${prefix + command}`
+        );
+        console.log(msg)
 
         if (cmd.group && !msg.isGroup)
-            return m.reply("Perintah ini hanya untuk group sahaja");
+            return msg.reply("Perintah ini hanya untuk group sahaja");
         if (cmd.admin && !isAdmin)
-            return m.reply("Perintah ini hanya untuk admin sahaja");
+            return msg.reply("Perintah ini hanya untuk admin sahaja");
         if (cmd.botadmin && !isBotAdmin)
-            return m.reply("Jadikan bot jadi admin terlebih dahulu");
+            return msg.reply("Jadikan bot jadi admin terlebih dahulu");
         if (cmd.owner && !isOwner)
-            return m.reply("Fitur ini hanya untuk owner sahaja");
+            return msg.reply("Fitur ini hanya untuk owner sahaja");
 
         try {
             await cmd.exec(msg, {
@@ -189,7 +203,7 @@ export default async function (sock, msg) {
             });
         } catch (e) {
             console.error(`Error executing command ${command}:`, e);
-            m.reply("Berlaku ralat semasa menjalankan command..");
+            msg.reply("Berlaku ralat semasa menjalankan command..");
         }
     }
-}
+};
