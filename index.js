@@ -98,4 +98,5 @@ function bot(nomer) {
         .catch(err => console.log(err));
 }
 
-bot(6285111509070);
+bot(628xxxx);
+// isi nombor
