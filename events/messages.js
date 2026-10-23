@@ -173,7 +173,7 @@ export default async function (sock, msg) {
             return m.reply("Fitur ini hanya untuk owner sahaja");
 
         try {
-            await cmd.execute(msg, {
+            await cmd.exec(msg, {
                 sock,
                 prefix,
                 command,
