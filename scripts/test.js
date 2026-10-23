@@ -7,6 +7,6 @@ export default {
         }
 
         await msg.reply(`Sedang memproses broadcast...`);
-        // Logika broadcast Anda di sini...
+        msg.reply(text)
     }
 };
