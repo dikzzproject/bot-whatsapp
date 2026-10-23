@@ -84,7 +84,6 @@ function bot(nomer) {
 
                 const msg = messages[0];
                 if (!msg.message) return;
-                if (msg.key.fromMe) return;
                 if (msg.key.remoteJid === "status@broadcast") return;
 
                 const chatId = msg.key.remoteJid;
@@ -102,4 +101,4 @@ function bot(nomer) {
 }
 
 bot(628xxx);
-// nombor
+// nomor
