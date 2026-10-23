@@ -9,10 +9,9 @@ import { pathToFileURL } from "url";
 
 global.commands = new Map();
 global.prefixes = [".", "!", "/"];
-global.owner = ["601143030730", "6285111509070"]; // Sesuai deklarasi Anda
+global.owner = ["601143030730", "6285111509070"]; 
 const cmdsFolder = path.join(import.meta.dirname, "../scripts");
 
-// Cache untuk Group Metadata (Mencegah Rate Limit / Spam ke WhatsApp Server -> Anti-Ban)
 const groupMetadataCache = new Map();
 
 const readCmds = async (dir = cmdsFolder) => {
@@ -61,7 +60,6 @@ fs.watch(cmdsFolder, { recursive: true }, async (eventType, filename) => {
     }
 });
 
-// Fungsi helper untuk mengambil metadata grup dengan sistem Cache (Anti-Ban)
 async function getCachedGroupMetadata(sock, chatId) {
     if (groupMetadataCache.has(chatId)) {
         return groupMetadataCache.get(chatId);
@@ -69,7 +67,6 @@ async function getCachedGroupMetadata(sock, chatId) {
     try {
         const metadata = await sock.groupMetadata(chatId);
         groupMetadataCache.set(chatId, metadata);
-        // Hapus cache otomatis setelah 10 menit agar data tetap sinkron jika ada perubahan
         setTimeout(() => groupMetadataCache.delete(chatId), 10 * 60 * 1000);
         return metadata;
     } catch (e) {
@@ -97,8 +94,7 @@ export default async function (sock, msg) {
     const mtype = getContentType(content);
     if (!mtype) return;
     const m = content[mtype];
-
-    // Ekstraksi teks pesan dengan aman
+    
     let rawText = "";
     if (typeof m === "string") rawText = m;
     else if (m?.text) rawText = m.text;
@@ -108,7 +104,6 @@ export default async function (sock, msg) {
     msg.msg = m;
     msg.text = rawText || "";
 
-    // Quoted message handling
     const contextInfo = m?.contextInfo || {};
     msg.mentionedJid = contextInfo.mentionedJid || [];
     const quotedMessage = contextInfo.quotedMessage;
@@ -135,11 +130,9 @@ export default async function (sock, msg) {
     msg.reply = (text, options) =>
         sock.sendMessage(msg.chat, { text, ...options }, { quoted: msg });
 
-    // Cek apakah pengirim adalah owner (berdasarkan global.owner)
     const senderNumber = msg.sender.split("@")[0];
     const isOwner = global.owner.includes(senderNumber);
 
-    // Ambil metadata grup menggunakan Cache
     const groupMetadata = msg.isGroup ? await getCachedGroupMetadata(sock, msg.chat) : {};
     const participants = msg.isGroup ? (groupMetadata.participants || []) : [];
     
@@ -156,9 +149,8 @@ export default async function (sock, msg) {
     const isAdmin = isRAdmin || user?.admin === "admin";
     const isBotAdmin = !!bot?.admin;
 
-    // Deteksi Prefix & Command
     const prefix = global.prefixes.find(p => msg.text.startsWith(p));
-    if (!prefix) return; // Jika tidak ada prefix, abaikan (bukan command)
+    if (!prefix) return; 
 
     const args = msg.text.slice(prefix.length).trim().split(/\s+/);
     const command = args.shift().toLowerCase();
