@@ -1,6 +1,7 @@
 import {
     getContentType,
-    normalizeMessageContent
+    normalizeMessageContent,
+    jidNormalizedUser
 } from "@whiskeysockets/baileys";
 import fs from "fs";
 import path from "path";
@@ -8,8 +9,11 @@ import { pathToFileURL } from "url";
 
 global.commands = new Map();
 global.prefixes = [".", "!", "/"];
-global.owner = ["601143030730", "6285111509070"];
+global.owner = ["601143030730", "6285111509070"]; // Sesuai deklarasi Anda
 const cmdsFolder = path.join(import.meta.dirname, "../scripts");
+
+// Cache untuk Group Metadata (Mencegah Rate Limit / Spam ke WhatsApp Server -> Anti-Ban)
+const groupMetadataCache = new Map();
 
 const readCmds = async (dir = cmdsFolder) => {
     if (dir === cmdsFolder) global.commands.clear();
@@ -57,44 +61,58 @@ fs.watch(cmdsFolder, { recursive: true }, async (eventType, filename) => {
     }
 });
 
+// Fungsi helper untuk mengambil metadata grup dengan sistem Cache (Anti-Ban)
+async function getCachedGroupMetadata(sock, chatId) {
+    if (groupMetadataCache.has(chatId)) {
+        return groupMetadataCache.get(chatId);
+    }
+    try {
+        const metadata = await sock.groupMetadata(chatId);
+        groupMetadataCache.set(chatId, metadata);
+        // Hapus cache otomatis setelah 10 menit agar data tetap sinkron jika ada perubahan
+        setTimeout(() => groupMetadataCache.delete(chatId), 10 * 60 * 1000);
+        return metadata;
+    } catch (e) {
+        return {};
+    }
+}
+
 export default async function (sock, msg) {
     const content = normalizeMessageContent(msg.message);
     if (!content) return;
 
     msg.id = msg.key.id;
     msg.fromMe = msg.key.fromMe;
-    msg.chat = msg.key.remoteJid || msg.key.remoteJidAlt || "";
+    msg.chat = jidNormalizedUser(msg.key.remoteJid || msg.key.remoteJidAlt || "");
     msg.isGroup = msg.chat.endsWith("@g.us");
-    msg.username = msg.isGroup
-        ? msg.key.participantUsername
-        : msg.key.remoteJidUsername || "";
-    msg.sender = msg.isGroup
-        ? msg.key.participant || msg.key.participantAlt
-        : msg.chat || "";
-    msg.userName = msg.pushName || msg.verifiedBizName || "Unkown";
+    
+    // Perbaikan penentuan sender & username
+    msg.sender = jidNormalizedUser(
+        msg.isGroup 
+            ? (msg.key.participant || msg.key.participantAlt || msg.participant) 
+            : msg.chat
+    );
+    msg.userName = msg.pushName || msg.verifiedBizName || "Unknown";
 
     const mtype = getContentType(content);
     if (!mtype) return;
     const m = content[mtype];
 
-    let text = "";
-    if (typeof m === "string") text = m;
-    else if (m?.text) text = m.text;
-    else if (m?.caption) text = m.caption;
-    else if (mtype === "conversation" && typeof m === "string") text = m;
+    // Ekstraksi teks pesan dengan aman
+    let rawText = "";
+    if (typeof m === "string") rawText = m;
+    else if (m?.text) rawText = m.text;
+    else if (m?.caption) rawText = m.caption;
 
     msg.type = mtype;
     msg.msg = m;
-    msg.text = text || "";
-    m.args = m.text
-        ?.trim()
-        .split(" ")
-        .slice(1)
-        .filter(v => v);
+    msg.text = rawText || "";
 
+    // Quoted message handling
     const contextInfo = m?.contextInfo || {};
     msg.mentionedJid = contextInfo.mentionedJid || [];
     const quotedMessage = contextInfo.quotedMessage;
+    
     if (quotedMessage) {
         const normalizedQuoted = normalizeMessageContent(quotedMessage);
         if (normalizedQuoted) {
@@ -104,12 +122,8 @@ export default async function (sock, msg) {
                 type: quotedType,
                 msg: quotedMsg,
                 id: contextInfo.stanzaId || null,
-                sender:
-                    contextInfo.participant || contextInfo.participantAlt || "",
-                text:
-                    typeof quotedMsg === "string"
-                        ? quotedMsg
-                        : quotedMsg?.text || quotedMsg?.caption || ""
+                sender: jidNormalizedUser(contextInfo.participant || contextInfo.participantAlt || ""),
+                text: typeof quotedMsg === "string" ? quotedMsg : quotedMsg?.text || quotedMsg?.caption || ""
             };
         } else {
             msg.quoted = null;
@@ -121,44 +135,38 @@ export default async function (sock, msg) {
     msg.reply = (text, options) =>
         sock.sendMessage(msg.chat, { text, ...options }, { quoted: msg });
 
-    const isOwner =
-        msg.sender === `${global.number[0]}@s.whatsapp.net` ||
-        msg.sender === `${global.number}@lid`
-            ? true
-            : false;
+    // Cek apakah pengirim adalah owner (berdasarkan global.owner)
+    const senderNumber = msg.sender.split("@")[0];
+    const isOwner = global.owner.includes(senderNumber);
 
-    const groupMetadata = m.isGroup ? await conn.groupMetadata(m.chat) : {};
-    const participants = m.isGroup ? groupMetadata.participants : [];
-    const user = m.isGroup
-        ? participants.find(
-              p => p.phoneNumber === m.sender || p.id === m.sender
-          )
+    // Ambil metadata grup menggunakan Cache
+    const groupMetadata = msg.isGroup ? await getCachedGroupMetadata(sock, msg.chat) : {};
+    const participants = msg.isGroup ? (groupMetadata.participants || []) : [];
+    
+    const user = msg.isGroup
+        ? participants.find(p => jidNormalizedUser(p.id) === msg.sender)
         : {};
-    const bot = m.isGroup
-        ? participants.find(p => p.phoneNumber === conn.user.id)
+    
+    const botJid = jidNormalizedUser(sock.user?.id);
+    const bot = msg.isGroup
+        ? participants.find(p => jidNormalizedUser(p.id) === botJid)
         : {};
-    const isRAdmin = user?.admin === "superadmin" ? true : false;
-    const isAdmin = isRAdmin || user?.admin === "admin" ? true : false;
+        
+    const isRAdmin = user?.admin === "superadmin";
+    const isAdmin = isRAdmin || user?.admin === "admin";
     const isBotAdmin = !!bot?.admin;
 
-    const regex = new RegExp(`^([${global.prefixes.join("")}])\\s+`);
-    const normalized = m.text.trim().replace(regex, "$1");
-    const prefix = global.prefixes.find(p => normalized.startsWith(p));
+    // Deteksi Prefix & Command
+    const prefix = global.prefixes.find(p => msg.text.startsWith(p));
+    if (!prefix) return; // Jika tidak ada prefix, abaikan (bukan command)
 
-    const command = prefix
-        ? normalized.slice(prefix.length).trim().split(" ")[0].toLowerCase()
-        : "";
-
-    const args = normalized
-        .slice(prefix ? prefix.length : 0)
-        .trim()
-        .split(/\s+/)
-        .slice(1);
+    const args = msg.text.slice(prefix.length).trim().split(/\s+/);
+    const command = args.shift().toLowerCase();
     const text = args.join(" ");
 
     const cmd = global.commands.get(command);
     if (cmd) {
-        console.log(`${m.userName} taip: ${prefix + command}`);
+        console.log(`[CMD] ${msg.userName} (${senderNumber}) mengetik: ${prefix + command}`);
 
         if (cmd.group && !msg.isGroup)
             return m.reply("Perintah ini hanya untuk group sahaja");
@@ -185,8 +193,8 @@ export default async function (sock, msg) {
                 isBotAdmin
             });
         } catch (e) {
-            console.error(e);
-            m.reply("berlaku ralat semasa command..");
+            console.error(`Error executing command ${command}:`, e);
+            m.reply("Berlaku ralat semasa menjalankan command..");
         }
     }
 }
