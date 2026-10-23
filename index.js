@@ -7,6 +7,7 @@ import makeWaSocket, {
 import pino from "pino";
 import fs from "fs";
 import path from "path";
+import NodeCache from "node-cache";
 import { ping, menu } from "./scripts/pesan.js";
 import { readSw, buatSticker, tagall } from "./scripts/fitur.js";
 import tebakkata from "./minigame/tebakkata.js";
