@@ -1,8 +1,8 @@
 import makeWaSocket, {
     DisconnectReason,
     useMultiFileAuthState,
-    fetchLatestBaileysVersion,
-    makeCacheableSignalKeyStore
+    makeCacheableSignalKeyStore,
+    fetchLatestBaileysVersion
 } from "@whiskeysockets/baileys";
 import pino from "pino";
 import fs from "fs";
@@ -16,6 +16,7 @@ import gcSetting from "./scripts/open-close.js";
 import tomp3 from "./scripts/tomp3.js";
 import tiktok from "./scripts/tt.js";
 import welcome from "./scripts/welcome.js";
+import handleMsg from './events/messages.js'
 
 const { version } = await fetchLatestBaileysVersion();
 const logger = pino({ level: "fatal" }).child({ level: "silent" });
@@ -91,7 +92,7 @@ function bot(nomer) {
                 menu(sock, chatId, msg);
 
                 try {
-                    await import("./events/messages.js")(sock, msg);
+                    await handleMsg(sock, msg)
                 } catch (err) {
                     console.error("Gagal memuat file messages.js:", err);
                 }
@@ -100,5 +101,5 @@ function bot(nomer) {
         .catch(err => console.log(err));
 }
 
-bot(628xxxx);
-// isi nombor
+bot(628xxx);
+// nombor
