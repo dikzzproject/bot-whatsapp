@@ -82,14 +82,13 @@ export default async function (sock, msg) {
     msg.fromMe = msg.key.fromMe;
     msg.chat = jidNormalizedUser(msg.key.remoteJid || msg.key.remoteJidAlt || "");
     msg.isGroup = msg.chat.endsWith("@g.us");
-    
-    // Perbaikan penentuan sender & username
+    msg.username = msg.key.participantUsername || msg.key.remoteJidUsername
     msg.sender = jidNormalizedUser(
         msg.isGroup 
             ? (msg.key.participant || msg.key.participantAlt || msg.participant) 
             : msg.chat
     );
-    msg.userName = msg.pushName || msg.verifiedBizName || "Unknown";
+    msg.name = msg.pushName || msg.verifiedBizName || "Unknown";
 
     const mtype = getContentType(content);
     if (!mtype) return;
@@ -136,14 +135,18 @@ export default async function (sock, msg) {
     const groupMetadata = msg.isGroup ? await getCachedGroupMetadata(sock, msg.chat) : {};
     const participants = msg.isGroup ? (groupMetadata.participants || []) : [];
     
-    const user = msg.isGroup
-        ? participants.find(p => jidNormalizedUser(p.id) === msg.sender)
-        : {};
-    
-    const botJid = jidNormalizedUser(sock.user?.id);
-    const bot = msg.isGroup
-        ? participants.find(p => jidNormalizedUser(p.id) === botJid)
-        : {};
+    const user = m.isGroup
+            ? participants?.find( u => (u.id || u.phoneNumber) === m.sender ||
+            u.username === msg.username
+              ) || {}
+            : {};
+        const bot = m.isGroup
+            ? participants?.find(
+                  u =>
+                      (u.id || u.phoneNumber) === sock.user?.lid ||
+                      (u.id || u.phoneNumber) === sock.user?.id
+              ) || {}
+            : {};
         
     const isRAdmin = user?.admin === "superadmin";
     const isAdmin = isRAdmin || user?.admin === "admin";
@@ -158,7 +161,7 @@ export default async function (sock, msg) {
 
     const cmd = global.commands.get(command);
     if (cmd) {
-        console.log(`[CMD] ${msg.userName} (${senderNumber}) mengetik: ${prefix + command}`);
+        console.log(`[CMD] ${msg.name} (${senderNumber}) mengetik: ${prefix + command}`);
 
         if (cmd.group && !msg.isGroup)
             return m.reply("Perintah ini hanya untuk group sahaja");
