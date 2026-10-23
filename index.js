@@ -1,6 +1,7 @@
 import makeWaSocket, {
     DisconnectReason,
     useMultiFileAuthState,
+    fetchLatestBaileysVersion,
     makeCacheableSignalKeyStore
 } from "@whiskeysockets/baileys";
 import pino from "pino";
