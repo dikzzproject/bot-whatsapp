@@ -1,3 +1,5 @@
+import cache, {setCache} from '../lib/cache.js';
+
 export function ping(sock, remoteJid, msg) {
   if (!msg || msg.isHistory) return;
   const pesan = msg.message?.conversation ||
@@ -6,12 +8,15 @@ export function ping(sock, remoteJid, msg) {
   if (pesan === "!ping") {
     const waktuPesan = msg.messageTimestamp * 1000;
     const hasil = (Date.now() - waktuPesan) / 1000;
-    sock.sendMessage(
-      remoteJid,
-      {text: `*Pong!*  ${hasil.toFixed(2)}s`},
-      {quoted: msg}
-    );
-    console.log('id pesan: ', remoteJid);
+
+    if (cache.has(pesan)) {
+      const res = cache.get(pesan);
+      sock.sendMessage(remoteJid, {text: res.p},{quoted: msg});
+    } else {
+      setCache(pesan, {p: `*Pong!*  ${hasil.toFixed(2)}ms`});
+      sock.sendMessage(remoteJid, {text: `*Pong!*  ${hasil.toFixed(2)}ms`},{quoted: msg});
+      console.log('id pesan: ', remoteJid);
+    }
   }
 }
 
