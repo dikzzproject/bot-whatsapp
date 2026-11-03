@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jadibot</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="card">
+        <header>
+            <h1 id="botName">Jadibot</h1>
+            <p class="muted">Jadikan nombor WhatsApp anda sebagai bot sendiri.</p>
+        </header>
+
+        <section id="setup">
+            <div class="choice" role="tablist" aria-label="Kaedah pemautan">
+                <button type="button" class="choice-btn active" data-method="pairing" role="tab">Kod Pairing</button>
+                <button type="button" class="choice-btn" data-method="qr" role="tab">Kod QR</button>
+            </div>
+
+            <label id="numberField" class="field">
+                <span>Nombor WhatsApp</span>
+                <input id="number" type="tel" inputmode="numeric" placeholder="60123456789" autocomplete="off">
+                <small class="muted">Guna kod negara, tanpa +, ruang atau simbol.</small>
+            </label>
+
+            <label id="codeField" class="field hidden">
+                <span>Kod akses</span>
+                <input id="accessCode" type="password" autocomplete="off">
+            </label>
+
+            <button id="startBtn" type="button" class="primary">Mulakan</button>
+        </section>
+
+        <section id="result" class="hidden">
+            <div class="status-row">
+                <span class="badge" id="statusBadge">Menunggu</span>
+                <span class="muted" id="statusText"></span>
+            </div>
+
+            <div id="pairingBox" class="box hidden">
+                <p class="muted">Masukkan kod ini pada WhatsApp:</p>
+                <div id="pairingCode" class="code"></div>
+                <button id="copyBtn" type="button" class="ghost">Salin kod</button>
+                <ol class="steps">
+                    <li>Buka WhatsApp pada telefon anda.</li>
+                    <li>Peranti Dipautkan › Pautkan peranti.</li>
+                    <li>Pilih "Pautkan dengan nombor telefon".</li>
+                    <li>Masukkan kod di atas.</li>
+                </ol>
+            </div>
+
+            <div id="qrBox" class="box hidden">
+                <p class="muted">Imbas kod QR ini melalui Peranti Dipautkan:</p>
+                <img id="qrImage" alt="Kod QR WhatsApp" width="260" height="260">
+            </div>
+
+            <div id="doneBox" class="box hidden">
+                <p class="done">Jadibot berjaya disambung.</p>
+                <p class="muted" id="doneNumber"></p>
+            </div>
+
+            <button id="stopBtn" type="button" class="danger">Hentikan sesi</button>
+        </section>
+
+        <p id="message" class="message hidden" role="alert"></p>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
