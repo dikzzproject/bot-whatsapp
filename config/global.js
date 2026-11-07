@@ -25,12 +25,12 @@ global.config = {
 
     owner: {
         name: "Dikz",
-        number: ["601143030730", "6285111509070", "131624289210464"],
-        username: ["rinn_draw", ""],
-        userkey: ["8900", ""]
+        number: ["", ""], // number, lid
+        username: ["", ""], // username di wa
+        userkey: ["", ""] // passkey di wa (opsional untuk pw, tidk perlu juga ni key)
     },
 
-    prefix: [".", "!", "/"],
+    prefix: [".", "!", "/"], // default
 
     official: {
         number: env.BOT_NUMBER || "",
