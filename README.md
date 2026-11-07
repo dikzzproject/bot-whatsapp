@@ -1,4 +1,4 @@
-# WhatsApp Bot (Beta 1.2.0)
+# WhatsApp Bot (Beta 3.12.0)
 
 A Node.js-based WhatsApp bot framework designed for automation, custom command handling, and interactive features. This project is currently in its Beta 1.2.0 testing phase.
 
@@ -6,16 +6,16 @@ A Node.js-based WhatsApp bot framework designed for automation, custom command h
 
 The repository is organized into the following directories:
 
-* **assets/**: Contains media components, configuration assets, or images used by the bot.
-* **minigame/**: Modular scripts handling text-based interactive games for chat users.
-* **scripts/**: Core logic handlers, plugin systems, and custom automation commands.
-* **session/**: Stores session authentication data (e.g., multi-device credentials) to maintain a persistent connection without re-scanning the QR code.
+* **config/media/**: Contains media components, configuration assets, or images used by the bot.
+* **database/assets/**: Modular scripts handling text-based interactive games for chat users.
+* **plugins/**: Core logic handlers, plugin systems, and custom automation commands.
+* **auth/**: Stores session authentication data (e.g., multi-device credentials) to maintain a persistent connection without re-scanning the QR code.
 * **index.js**: The central entry point that initializes the WhatsApp client and boots up event listeners.
 
 ## 🛠️ Prerequisites
 
 Ensure you have the following installed on your local environment:
-* **Node.js** (v16.x or higher recommended)
+* **Node.js** (v20.x or higher recommended)
 * **npm** (Node Package Manager)
 * **Git**
 
@@ -34,6 +34,9 @@ Follow these steps to deploy and run the bot locally:
    ```bash
    npm install
    ```
+
+3. **Setup in config**
+the example in `.env.example`, when finished, rename the file to `.env`, delete text `.example`
 
 ## 🚀 Running the Bot
 
