@@ -1,0 +1,57 @@
+{
+    "name": "dikzzbot",
+    "version": "4.15.0",
+    "description": "Bot WhatsApp berasaskan Baileys dengan sistem plugin, jadibot dan dashboard web",
+    "main": "index.js",
+    "type": "module",
+    "engines": {
+        "node": ">=20.6.0"
+    },
+    "scripts": {
+        "start": "node index.js",
+        "dev": "node --watch main.js"
+    },
+    "keywords": [
+        "whatsapp",
+        "bot",
+        "baileys",
+        "jadibot"
+    ],
+    "license": "ISC",
+    "imports": {
+        "#config": "./config/index.js",
+        "#config/*": "./config/*",
+        "#database": "./database/index.js",
+        "#database/*": "./database/*",
+        "#logger": "./src/assets/logger.js",
+        "#assets/*": "./src/assets/*",
+        "#lib/*": "./src/lib/*",
+        "#client/*": "./src/client/*",
+        "#events/*": "./src/events/*",
+        "#jadibot/*": "./src/jadibot/*"
+    },
+    "dependencies": {
+        "@google/genai": "^3.0.0",
+        "@hapi/boom": "^10.0.1",
+        "@img/sharp-wasm32": "^0.35.5",
+        "@whiskeysockets/baileys": "*",
+        "axios": "^1.20.0",
+        "axios-cookiejar-support": "^7.0.0",
+        "chalk": "^6.0.1",
+        "file-type": "^19.6.0",
+        "jimp": "^1.6.1",
+        "link-preview-js": "^3.2.0",
+        "moment-timezone": "^0.6.5",
+        "node-cache": "^5.1.2",
+        "node-fetch": "^3.3.2",
+        "nodemailer": "^6.9.16",
+        "pino": "^10.4.0",
+        "prism-media": "^1.3.5",
+        "qrcode": "^1.5.4",
+        "sharp": "^0.35.5",
+        "stickers-formatter": "^1.0.0",
+        "xfarr-api": "^3.0.1",
+        "yt-downld": "^1.0.0",
+        "yt-search": "^2.13.1"
+    }
+}
