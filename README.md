@@ -1,4 +1,4 @@
-# WhatsApp Bot (Beta 3.12.0)
+# WhatsApp Bot (Beta 4.15.0)
 
 A Node.js-based WhatsApp bot framework designed for automation, custom command handling, and interactive features. This project is currently in its Beta 1.2.0 testing phase.
 
